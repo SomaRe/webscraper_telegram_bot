@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup
 import requests
-import keys
+import scrape_keys
 import logging
 from telegram import Update
 from telegram.ext import Updater, CommandHandler,  CallbackContext
@@ -14,25 +14,26 @@ logger = logging.getLogger(__name__)
 # logging End
 
 
-url = "https://www.canadacomputers.com/search/results_details.php?language=en&keywords=3070+ti+%2B"
+urls = ("https://www.canadacomputers.com/search/results_details.php?language=en&keywords=3070+ti+%2B","https://www.canadacomputers.com/search/results_details.php?language=en&keywords=3070+%2B")
 interval = 43200
 
-TOKEN = keys.TELE_TOKEN
+TOKEN = scrape_keys.TELE_TOKEN
 
 def scrape(context: CallbackContext):
     job = context.job
-    result = requests.get(url)
-    soup = BeautifulSoup(result.text, 'html.parser')
-    productTag = soup.find(id = "product-list")
-    children = productTag.findChildren("div",recursive=False)
     flag = False
-    for child in children:
-        if "Bundle Code:" in str(child):
-            flag = True
+    for url in urls:
+        result = requests.get(url)
+        soup = BeautifulSoup(result.text, 'html.parser')
+        productTag = soup.find(id = "product-list")
+        children = productTag.findChildren("div",recursive=False)
+        for child in children:
+            if "Bundle Code" in str(child):
+                flag = True
 
     if(flag == True):
         context.bot.send_message(job.context, text ="Bundle's available")
-        context.bot.send_message(job.context, text ="https://www.canadacomputers.com/search/results_details.php?language=en&keywords=3070+ti+%2B")    
+        context.bot.send_message(job.context, text ="https://www.canadacomputers.com/bundles.php")    
     else:
         context.bot.send_message(job.context, text ="No Bundles Found")
 
